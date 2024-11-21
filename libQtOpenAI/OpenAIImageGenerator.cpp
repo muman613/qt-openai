@@ -1,20 +1,34 @@
-
 #include "OpenAIImageGenerator.h"
+#include "ImageDownloader.h"
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QNetworkRequest>
-#include <QNetworkReply>
 #include <QJsonArray>
-#include <QFile>
 #include <QDir>
-#include "ImageDownloader.h"
+#include <QDebug>
 
 OpenAIImageGenerator::OpenAIImageGenerator(QObject *parent)
-    : OpenAIBaseClient(parent) {
+    : OpenAIBaseClient(parent),
+      m_downloadPath(QDir::currentPath()),  // Default path: current directory
+      m_outputFileName("generated_image.jpg") {  // Default file name
     setApiUrl("https://api.openai.com/v1/images/generations");
 
- // Connect network manager's finished signal to the handleImageGenerationReply slot
     connect(m_networkManager, &QNetworkAccessManager::finished, this, &OpenAIImageGenerator::handleImageGenerationReply);
+}
+
+void OpenAIImageGenerator::setDownloadPath(const QString &path) {
+    m_downloadPath = path;
+}
+
+QString OpenAIImageGenerator::downloadPath() const {
+    return m_downloadPath;
+}
+
+void OpenAIImageGenerator::setOutputFileName(const QString &fileName) {
+    m_outputFileName = fileName;
+}
+
+QString OpenAIImageGenerator::outputFileName() const {
+    return m_outputFileName;
 }
 
 void OpenAIImageGenerator::generateImage(const QString &prompt) {
@@ -31,34 +45,13 @@ void OpenAIImageGenerator::generateImage(const QString &prompt) {
     QJsonDocument jsonDoc(requestObject);
     QByteArray requestData = jsonDoc.toJson();
 
-    QNetworkRequest request; // (QUrl(m_apiUrl));
+    QNetworkRequest request;
     request.setUrl(m_apiUrl);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", QString("Bearer %1").arg(m_apiKey).toUtf8());
 
     m_networkManager->post(request, requestData);
 }
-
-// void OpenAIImageGenerator::handleImageGenerationReply(QNetworkReply *reply) {
-//     qDebug() << Q_FUNC_INFO;
-
-//     if (reply->error() == QNetworkReply::NoError) {
-//         QByteArray responseData = reply->readAll();
-//         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
-//         QString imageUrl = jsonResponse["data"].toArray()[0].toObject()["url"].toString();
-
-//         qDebug() << "URL :" << imageUrl;
-
-//         ImageDownloader download(imageUrl);
-
-//         download.start();
-
-//         // emit imageGenerated("downloaded_image.jpg");
-//     } else {
-//         emit errorOccurred(reply->errorString());
-//     }
-//     reply->deleteLater();
-// }
 
 void OpenAIImageGenerator::handleImageGenerationReply(QNetworkReply *reply) {
     qDebug() << Q_FUNC_INFO;
@@ -68,12 +61,12 @@ void OpenAIImageGenerator::handleImageGenerationReply(QNetworkReply *reply) {
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QString imageUrl = jsonResponse["data"].toArray()[0].toObject()["url"].toString();
 
-        qDebug() << "URL :" << imageUrl;
+        qDebug() << "URL:" << imageUrl;
 
         // Create and configure the ImageDownloader
         ImageDownloader *download = new ImageDownloader(imageUrl, this);
-        download->setDownloadFileName("generated_image.png");  // Optional: Set custom file name
-        download->setDownloadPath(QDir::currentPath());        // Optional: Set custom download path
+        download->setDownloadFileName(m_outputFileName);  // Use configured file name
+        download->setDownloadPath(m_downloadPath);        // Use configured path
 
         // Connect signals from ImageDownloader to OpenAIImageGenerator
         connect(download, &ImageDownloader::downloadComplete, this, [this, download](const QString &filePath) {

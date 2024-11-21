@@ -3,6 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QFile>
 
 OpenAITTSClient::OpenAITTSClient(QObject *parent)
@@ -25,7 +26,7 @@ void OpenAITTSClient::generateSpeech(const QString &text) {
     QJsonDocument jsonDoc(requestObject);
     QByteArray requestData = jsonDoc.toJson();
 
-    QNetworkRequest request(QUrl(m_apiUrl));
+    QNetworkRequest request(m_apiUrl);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", QString("Bearer %1").arg(m_apiKey).toUtf8());
 

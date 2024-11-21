@@ -9,6 +9,8 @@ add_library(${PROJECT_NAME} STATIC
   OpenAIAPIClient.h
   OpenAIImageGenerator.cpp
   OpenAIImageGenerator.h
+  OpenAITTSClient.cpp
+  OpenAITTSClient.h
   ImageDownloader.cpp
   ImageDownloader.h
 )

@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include "OpenAIImageGenerator.h"
 #include <QProcessEnvironment>
 
@@ -19,8 +20,11 @@ int main(int argc, char *argv[])
 
     OpenAIImageGenerator imageGenerator;
     imageGenerator.setApiKey(apiKey);
-    QObject::connect(&imageGenerator, &OpenAIImageGenerator::imageGenerated, [](const QString &filePath)
-                     {
+
+    imageGenerator.setDownloadPath(QDir::currentPath());
+    imageGenerator.setOutputFileName("generated_image.png");
+    
+    QObject::connect(&imageGenerator, &OpenAIImageGenerator::imageGenerated, [](const QString &filePath) {
         qDebug() << "Image generated and saved to:" << filePath;
         QCoreApplication::quit(); });
 
