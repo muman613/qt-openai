@@ -1,16 +1,14 @@
 #include "ImageGeneratorWindow.h"
-#include <QPixmap>
 #include <QDebug>
 #include <QDir>
+#include <QPixmap>
+#include <QProcessEnvironment>
 
 ImageGeneratorWindow::ImageGeneratorWindow(QWidget *parent)
-    : QWidget(parent),
-      fileNameEdit(new QLineEdit(this)),
-      descriptionEdit(new QLineEdit(this)),
-      generateButton(new QPushButton("Generate", this)),
-      imageLabel(new QLabel(this)),
+    : QWidget(parent), fileNameEdit(new QLineEdit(this)), descriptionEdit(new QLineEdit(this)),
+      generateButton(new QPushButton("Generate", this)), imageLabel(new QLabel(this)),
       imageGenerator(new OpenAIImageGenerator(this)) {
-    
+
     // Set up the layout
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
@@ -39,8 +37,16 @@ ImageGeneratorWindow::ImageGeneratorWindow(QWidget *parent)
     connect(imageGenerator, &OpenAIImageGenerator::imageGenerated, this, &ImageGeneratorWindow::onImageGenerated);
     connect(imageGenerator, &OpenAIImageGenerator::errorOccurred, this, &ImageGeneratorWindow::onErrorOccurred);
 
+    // Retrieve the API key from the environment variable
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QString apiKey = env.value("OPENAI_API_KEY");
+
+    if (apiKey.isEmpty()) {
+        qWarning() << "Error: OPENAI_API_KEY environment variable is not set.";
+    }
+
     // Set default API key for the image generator
-    imageGenerator->setApiKey("your_openai_api_key_here");  // Replace with your OpenAI API key
+    imageGenerator->setApiKey(apiKey); // Replace with your OpenAI API key
 }
 
 void ImageGeneratorWindow::onGenerateButtonClicked() {
