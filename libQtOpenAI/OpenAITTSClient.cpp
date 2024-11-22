@@ -8,8 +8,10 @@
 
 OpenAITTSClient::OpenAITTSClient(QObject *parent)
     : OpenAIBaseClient(parent) {
-    setApiUrl("https://api.openai.com/v1/audio/synthesize");
-    setModel("text-to-speech");
+    setApiUrl("https://api.openai.com/v1/audio/speech");
+    setModel("tts-1");
+    // Connect the finished signal of QNetworkAccessManager to handleTTSReply
+    connect(m_networkManager, &QNetworkAccessManager::finished, this, &OpenAITTSClient::handleTTSReply);
 }
 
 void OpenAITTSClient::generateSpeech(const QString &text) {
@@ -19,9 +21,9 @@ void OpenAITTSClient::generateSpeech(const QString &text) {
     }
 
     QJsonObject requestObject;
-    requestObject["text"] = text;
+    requestObject["input"] = text;
     requestObject["model"] = m_model;
-    requestObject["voice"] = "en-US";
+    requestObject["voice"] = "alloy";
 
     QJsonDocument jsonDoc(requestObject);
     QByteArray requestData = jsonDoc.toJson();
