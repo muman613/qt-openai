@@ -28,7 +28,6 @@ class OpenAIImageGenerator : public OpenAIBaseClient {
   protected:
     QString m_downloadPath;   // Directory to save the downloaded image
     QString m_outputFileName; // File name for the downloaded image
-    QString m_model;          // Image gen model to use
 };
 
 #endif // OPENAIIMAGEGENERATOR_H

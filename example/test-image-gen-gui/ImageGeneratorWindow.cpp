@@ -74,7 +74,7 @@ void ImageGeneratorWindow::onImageGenerated(const QString &filePath) {
     // Load and display the image
     QPixmap pixmap(filePath);
     if (!pixmap.isNull()) {
-        imageLabel->setPixmap(pixmap.scaled(imageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        imageLabel->setPixmap(pixmap);
     } else {
         imageLabel->setText("Failed to load image.");
     }

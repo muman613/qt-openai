@@ -8,7 +8,8 @@
 
 OpenAIImageGenerator::OpenAIImageGenerator(QObject *parent)
     : OpenAIBaseClient(parent), m_downloadPath(QDir::currentPath()), // Default path: current directory
-      m_outputFileName("generated_image.jpg"), m_model("dall-e-3") { // Default file name
+      m_outputFileName("generated_image.jpg") { // Default file name
+    setModel("dall-e-3");
     setApiUrl("https://api.openai.com/v1/images/generations");
 
     connect(m_networkManager, &QNetworkAccessManager::finished, this, &OpenAIImageGenerator::handleImageGenerationReply);
