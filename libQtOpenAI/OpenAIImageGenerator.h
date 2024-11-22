@@ -6,7 +6,7 @@
 class OpenAIImageGenerator : public OpenAIBaseClient {
     Q_OBJECT
 
-public:
+  public:
     explicit OpenAIImageGenerator(QObject *parent = nullptr);
 
     void generateImage(const QString &prompt);
@@ -18,16 +18,17 @@ public:
     void setOutputFileName(const QString &fileName);
     QString outputFileName() const;
 
-signals:
+  signals:
     void imageGenerated(const QString &filePath);
     void errorOccurred(const QString &errorString);
 
-private slots:
+  private slots:
     void handleImageGenerationReply(QNetworkReply *reply);
 
-protected:
-    QString m_downloadPath;    // Directory to save the downloaded image
-    QString m_outputFileName;  // File name for the downloaded image
+  protected:
+    QString m_downloadPath;   // Directory to save the downloaded image
+    QString m_outputFileName; // File name for the downloaded image
+    QString m_model;          // Image gen model to use
 };
 
 #endif // OPENAIIMAGEGENERATOR_H
