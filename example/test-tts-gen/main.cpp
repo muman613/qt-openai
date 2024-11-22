@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
-    Retrieve the API key from the environment variable
+    // Retrieve the API key from the environment variable
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     QString apiKey = env.value("OPENAI_API_KEY");
 
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     OpenAITTSClient ttsClient;
     ttsClient.setApiKey(apiKey);
-    
+
     // imageGenerator.setDownloadPath(QDir::currentPath());
     // imageGenerator.setOutputFileName("generated_image.png");
     
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
         QCoreApplication::quit();
     });
     
-    ttsClient.generateSpeech("This is a test, this is only a test, do not be alarmed because this is only a test");
+    ttsClient.generateSpeech("This is a test, this is only a test, do not be alarmed because this is only a test. Life in the fast lane.");
     
     // QObject::connect(&imageGenerator, &OpenAIImageGenerator::errorOccurred, [](const QString &error) {
     //     qWarning() << "Error:" << error;
