@@ -18,6 +18,11 @@ public:
     void setFileName(const QString &fileName);
     QString fileName() const;
 
+    void setVoice(const QString &voice);
+    QString voice() const;
+    
+    QStringList voices() const;
+
 signals:
     void audioGenerated(const QString &filePath);
     void errorOccurred(const QString &errorString);
@@ -28,6 +33,7 @@ private slots:
 private:
     QString m_downloadPath;    // Directory to save the audio file
     QString m_fileName;        // Name of the audio file
+    QString m_voice;
 };
 
 #endif // OPENAITTSCLIENT_H

@@ -8,6 +8,7 @@
 #include <QMediaPlayer>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QComboBox>
 #include "OpenAITTSClient.h"
 
 class TTSGeneratorWindow : public QWidget {
@@ -25,6 +26,7 @@ private:
     QLineEdit *fileNameEdit;    // Input for file name
     QTextEdit *textEdit;        // Input for the text to convert to speech
     QPushButton *generateButton;
+    QComboBox *voiceCombo;
     OpenAITTSClient *ttsClient; // TTS client
     QMediaPlayer *mediaPlayer;  // Audio playback
 };

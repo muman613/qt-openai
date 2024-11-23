@@ -1,15 +1,12 @@
 #include "TTSGeneratorWindow.h"
 #include <QDebug>
+#include <QDir>
 #include <QLabel>
 #include <QProcessEnvironment>
-#include <QDir>
 
 TTSGeneratorWindow::TTSGeneratorWindow(QWidget *parent)
-    : QWidget(parent),
-      fileNameEdit(new QLineEdit(this)),
-      textEdit(new QTextEdit(this)),
-      generateButton(new QPushButton("Generate", this)),
-      ttsClient(new OpenAITTSClient(this)),
+    : QWidget(parent), fileNameEdit(new QLineEdit(this)), textEdit(new QTextEdit(this)),
+      generateButton(new QPushButton("Generate", this)), voiceCombo(new QComboBox(this)), ttsClient(new OpenAITTSClient(this)),
       mediaPlayer(new QMediaPlayer(this)) {
 
     // Set up the layout
@@ -20,6 +17,10 @@ TTSGeneratorWindow::TTSGeneratorWindow(QWidget *parent)
     fileNameLayout->addWidget(new QLabel("File Name:", this));
     fileNameLayout->addWidget(fileNameEdit);
 
+    QVBoxLayout *voiceLayout = new QVBoxLayout();
+    voiceLayout->addWidget(new QLabel("Voice:", this));
+    voiceLayout->addWidget(voiceCombo);
+
     // Text input layout
     QVBoxLayout *textInputLayout = new QVBoxLayout();
     textInputLayout->addWidget(new QLabel("Text to Convert to Speech:", this));
@@ -27,6 +28,7 @@ TTSGeneratorWindow::TTSGeneratorWindow(QWidget *parent)
 
     // Add inputs and button to the main layout
     mainLayout->addLayout(fileNameLayout);
+    mainLayout->addLayout(voiceLayout);
     mainLayout->addLayout(textInputLayout);
     mainLayout->addWidget(generateButton);
 
@@ -43,8 +45,14 @@ TTSGeneratorWindow::TTSGeneratorWindow(QWidget *parent)
     if (apiKey.isEmpty()) {
         qWarning() << "Error: OPENAI_API_KEY environment variable is not set.";
     }
-    
+
     ttsClient->setApiKey(apiKey);
+
+    auto voicesList = ttsClient->voices();
+
+    for (const auto &voice : voicesList) {
+        voiceCombo->addItem(voice);
+    }
 }
 
 void TTSGeneratorWindow::onGenerateButtonClicked() {
@@ -59,6 +67,7 @@ void TTSGeneratorWindow::onGenerateButtonClicked() {
     // Configure the TTS client
     ttsClient->setFileName(fileName);
     ttsClient->setDownloadPath(QDir::currentPath());
+    ttsClient->setVoice(voiceCombo->currentText());
 
     // Start the text-to-speech process
     ttsClient->generateSpeech(text);

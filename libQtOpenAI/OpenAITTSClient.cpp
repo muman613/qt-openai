@@ -13,6 +13,7 @@ OpenAITTSClient::OpenAITTSClient(QObject *parent)
       m_fileName("synthesized_audio.mp3") { // Default file name
     setApiUrl("https://api.openai.com/v1/audio/speech");
     setModel("tts-1");
+    setVoice("alloy");
 
         // Retrieve the API key from the environment variable
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -58,7 +59,7 @@ void OpenAITTSClient::generateSpeech(const QString &text) {
     QJsonObject requestObject;
     requestObject["input"] = text;
     requestObject["model"] = m_model;
-    requestObject["voice"] = "alloy";
+    requestObject["voice"] = m_voice;
 
     QJsonDocument jsonDoc(requestObject);
     QByteArray requestData = jsonDoc.toJson();
@@ -90,4 +91,20 @@ void OpenAITTSClient::handleTTSReply(QNetworkReply *reply) {
         emit errorOccurred(reply->errorString());
     }
     reply->deleteLater();
+}
+
+void OpenAITTSClient::setVoice(const QString &v) {
+    m_voice = v;
+}
+
+QString OpenAITTSClient::voice() const {
+    return m_voice;
+}
+
+QStringList OpenAITTSClient::voices() const {
+    static QStringList voiceList = {
+        "alloy", "echo", "fable", "onyx", "nova", "shimmer"
+    };
+
+    return voiceList;
 }
