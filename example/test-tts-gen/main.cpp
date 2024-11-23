@@ -33,15 +33,8 @@ int main(int argc, char *argv[]) {
         QCoreApplication::quit();
     });
     
+    ttsClient.setFileName("output");
     ttsClient.generateSpeech("This is a test, this is only a test, do not be alarmed because this is only a test. Life in the fast lane.");
     
-    // QObject::connect(&imageGenerator, &OpenAIImageGenerator::errorOccurred, [](const QString &error) {
-    //     qWarning() << "Error:" << error;
-    //     QCoreApplication::quit();
-    // });
-
-    // // Generate an image with a prompt
-    // imageGenerator.generateImage("A happy kitten playing with toys");
-
     return app.exec();
 }
