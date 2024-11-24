@@ -1,18 +1,24 @@
 #include "FileDownloader.h"
 #include <QFile>
 #include <QDir>
+#include <QDate>
 #include <QDebug>
-#include <QEventLoop>
-
 
 FileDownloader::FileDownloader(const QString &url, QObject *parent)
     : QObject(parent),
-      manager(nullptr), // Will be created in run()
+      manager(new QNetworkAccessManager(this)),
       currentReply(nullptr),
+      timeoutTimer(new QTimer(this)),
       fileUrl(url),
       downloadPath(QDir::currentPath()),
       downloadFileName("downloaded_file"),
+      fileExtension(""),
+      namingMode(SimpleName),
+      sequenceNumber(0),
       timeoutDuration(30000) { // Default timeout: 30 seconds
+    timeoutTimer->setSingleShot(true);
+    connect(timeoutTimer, &QTimer::timeout, this, &FileDownloader::onTimeout);
+    connect(manager, &QNetworkAccessManager::finished, this, &FileDownloader::onDownloadFinished);
 }
 
 void FileDownloader::setDownloadPath(const QString &path) {
@@ -23,14 +29,23 @@ void FileDownloader::setDownloadFileName(const QString &fileName) {
     downloadFileName = fileName;
 }
 
+void FileDownloader::setFileExtension(const QString &extension) {
+    fileExtension = extension;
+}
+
+void FileDownloader::setFileNamingMode(FileDownloader::NamingMode mode) {
+    namingMode = mode;
+}
+
+void FileDownloader::setSequenceStart(int start) {
+    sequenceNumber = start;
+}
+
 void FileDownloader::setTimeout(int milliseconds) {
     timeoutDuration = milliseconds;
 }
 
-void FileDownloader::run() {
-    manager = new QNetworkAccessManager(); // Create in the thread
-    connect(manager, &QNetworkAccessManager::finished, this, &FileDownloader::onDownloadFinished);
-
+void FileDownloader::start() {
     QUrl url(fileUrl);
     if (!url.isValid() || url.scheme().isEmpty()) {
         emit downloadFailed(QString("Invalid URL: %1").arg(fileUrl));
@@ -41,35 +56,36 @@ void FileDownloader::run() {
     currentReply = manager->get(request);
 
     connect(currentReply, &QNetworkReply::errorOccurred, this, &FileDownloader::onReplyError);
-    connect(currentReply, &QNetworkReply::downloadProgress, this, [](qint64 bytesReceived, qint64 bytesTotal) {
-        qDebug() << "Download Progress:" << bytesReceived << "/" << bytesTotal;
-    });
-
-    timeoutTimer.setSingleShot(true);
-    connect(&timeoutTimer, &QTimer::timeout, this, &FileDownloader::onTimeout);
-    timeoutTimer.start(timeoutDuration);
-
-    // Start the event loop for asynchronous operations
-    QEventLoop loop;
-    connect(this, &FileDownloader::downloadComplete, &loop, &QEventLoop::quit);
-    connect(this, &FileDownloader::downloadFailed, &loop, &QEventLoop::quit);
-    loop.exec();
-
-    cleanUpReply();
+    timeoutTimer->start(timeoutDuration);
 }
 
-void FileDownloader::onReplyError(QNetworkReply::NetworkError code) {
-    QString errorReason = currentReply ? currentReply->errorString() : "Unknown error";
-    emit downloadFailed(QString("Network error (%1): %2").arg(code).arg(errorReason));
-    timeoutTimer.stop();
-    cleanUpReply();
+QString FileDownloader::generateFileName() const {
+    QString baseName = downloadFileName;
+    QString suffix;
+
+    switch (namingMode) {
+    case SimpleName:
+        return downloadPath + "/" + baseName;
+
+    case WithExtension:
+        return downloadPath + "/" + baseName + "." + fileExtension;
+
+    case SequenceNumber:
+        suffix = QString("_%1").arg(sequenceNumber, 3, 10, QChar('0'));
+        return downloadPath + "/" + baseName + suffix + "." + fileExtension;
+
+    case WithDatestamp:
+        suffix = "_" + QDate::currentDate().toString("yyyyMMdd");
+        return downloadPath + "/" + baseName + suffix + "." + fileExtension;
+    }
+
+    return downloadPath + "/" + baseName; // Fallback
 }
 
 void FileDownloader::onDownloadFinished() {
-    timeoutTimer.stop();
+    timeoutTimer->stop();
 
     if (!currentReply || currentReply->error() != QNetworkReply::NoError) {
-        // Error case is handled in onReplyError
         cleanUpReply();
         return;
     }
@@ -77,13 +93,7 @@ void FileDownloader::onDownloadFinished() {
     QByteArray data = currentReply->readAll();
     cleanUpReply();
 
-    QDir dir(downloadPath);
-    if (!dir.exists() && !dir.mkpath(".")) {
-        emit downloadFailed(QString("Failed to create directory: %1").arg(downloadPath));
-        return;
-    }
-
-    QString fullFilePath = dir.filePath(downloadFileName);
+    QString fullFilePath = generateFileName();
 
     QFile file(fullFilePath);
     if (file.open(QIODevice::WriteOnly)) {
@@ -93,6 +103,16 @@ void FileDownloader::onDownloadFinished() {
     } else {
         emit downloadFailed(QString("Failed to save the file: %1").arg(fullFilePath));
     }
+
+    if (namingMode == SequenceNumber) {
+        ++sequenceNumber;
+    }
+}
+
+void FileDownloader::onReplyError(QNetworkReply::NetworkError) {
+    emit downloadFailed(currentReply ? currentReply->errorString() : "Unknown error");
+    timeoutTimer->stop();
+    cleanUpReply();
 }
 
 void FileDownloader::onTimeout() {
@@ -108,6 +128,4 @@ void FileDownloader::cleanUpReply() {
         currentReply->deleteLater();
         currentReply = nullptr;
     }
-    delete manager; // Clean up manager after the task is done
-    manager = nullptr;
 }
