@@ -15,6 +15,10 @@ add_library(${PROJECT_NAME} STATIC
   # OpenAITranscriptionClient.h
   ImageDownloader.cpp
   ImageDownloader.h
+  DownloadManager.cpp 
+  DownloadManager.h 
+  FileDownloader.cpp 
+  FileDownloader.h
 )
 
 # Add the include directory to the library's include path
