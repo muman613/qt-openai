@@ -56,7 +56,7 @@
 
 ## Examples
 
-- See the [examples](examples/) directory for sample applications demonstrating various use cases.
+- See the [example](example/) directory for sample applications demonstrating various use cases.
 
 ## Contributing
 
