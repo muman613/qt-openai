@@ -62,8 +62,8 @@ void ChatClientWindow::onSendButtonClicked() {
 void ChatClientWindow::onResponseReceived(const QString &response) {
     qDebug() << "Response received:" << response;
 
-    // Display the response
-    responseEdit->setText(response);
+    // Set Markdown content to the document
+    responseEdit->document()->setMarkdown(response);
     sendButton->setEnabled(true); // Re-enable the button
 }
 
